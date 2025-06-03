@@ -324,19 +324,25 @@ function createExhaustParticles() {
 }
 
 // Posicionar cámara en la moto
-function camaraenmoto(){
+function camaraenmoto() {
   if (!motorcycle) return;
 
-  // Desactivar controles de órbita
   controls.enabled = false;
 
-  // Calcular posición de la cámara
-  const offset = new THREE.Vector3(0, 2, 5);
-  const cameraPosition = motorcycle.position.clone().add(offset);
+  // Offset relativo a la orientación de la moto (atrás y arriba)
+  const offset = new THREE.Vector3(0, 1.2, -1.8); // Y: altura, Z: atrás (negativo)
+  offset.applyAxisAngle(new THREE.Vector3(0, 1, 0), motorcycle.rotation.y); // Aplica la rotación de la moto
 
-  // Posicionar cámara
+  // Nueva posición de la cámara
+  const cameraPosition = motorcycle.position.clone().add(offset);
   camera.position.copy(cameraPosition);
-  camera.lookAt(motorcycle.position);
+
+  // Mira hacia adelante de la moto (un poco más arriba para mejor vista)
+  const lookAtOffset = new THREE.Vector3(0, 1, 2);
+  lookAtOffset.applyAxisAngle(new THREE.Vector3(0, 1, 0), motorcycle.rotation.y);
+  const lookAt = motorcycle.position.clone().add(lookAtOffset);
+  camera.lookAt(lookAt);
+
   camera.updateMatrix();
 }
 
