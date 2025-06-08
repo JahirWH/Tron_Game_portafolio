@@ -124,77 +124,60 @@ function createMotorcycle() {
 
   // Materiales
   const bodyMaterial = new THREE.MeshPhongMaterial({
-    color: 0x333333,
-    specular: 0x999999,
-    shininess: 100
+    color: 0x1a1a1a,
+    specular: 0x00ff88,
+    shininess: 100,
+    emissive: 0x00ff88,
+    emissiveIntensity: 0.2
   });
 
   const detailMaterial = new THREE.MeshPhongMaterial({
     color: 0x00ff88,
-    emissive: 0x00ff44,
-    emissiveIntensity: 0.5,
+    emissive: 0x00ff88,
+    emissiveIntensity: 0.8,
     specular: 0xffffff,
     shininess: 100
   });
 
   const wheelMaterial = new THREE.MeshPhongMaterial({
     color: 0x111111,
-    specular: 0x333333,
-    shininess: 30
+    specular: 0x00ff88,
+    shininess: 50,
+    emissive: 0x00ff88,
+    emissiveIntensity: 0.1
   });
 
-  // Cuerpo de la moto
-  const bodyGeometry = new THREE.BoxGeometry(0.8, 0.4, 2);
+  // Cuerpo principal de la moto (más aerodinámico y minimalista)
+  const bodyGeometry = new THREE.BoxGeometry(0.8, 0.3, 2.5);
   const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
-  body.position.y = 0.5;
+  body.position.y = 0.4;
   body.castShadow = true;
   motorcycle.add(body);
 
-  // Manillar
-  const handlebarGeometry = new THREE.CylinderGeometry(0.05, 0.05, 0.6, 8);
-  const handlebar = new THREE.Mesh(handlebarGeometry, bodyMaterial);
-  handlebar.position.set(0, 0.8, 0.7);
-  handlebar.rotation.x = Math.PI / 2;
-  motorcycle.add(handlebar);
+  // Detalles del cuerpo con líneas neón
+  const bodyDetailGeometry = new THREE.BoxGeometry(0.82, 0.05, 2.52);
+  const bodyDetail = new THREE.Mesh(bodyDetailGeometry, detailMaterial);
+  bodyDetail.position.y = 0.4;
+  motorcycle.add(bodyDetail);
 
-  // Detalles del manillar
-  const handleDetail1 = new THREE.Mesh(
-    new THREE.SphereGeometry(0.07, 8, 8),
-    detailMaterial
-  );
-  handleDetail1.position.set(0.3, 0.8, 0.7);
-  motorcycle.add(handleDetail1);
-
-  const handleDetail2 = new THREE.Mesh(
-    new THREE.SphereGeometry(0.07, 8, 8),
-    detailMaterial
-  );
-  handleDetail2.position.set(-0.3, 0.8, 0.7);
-  motorcycle.add(handleDetail2);
-
-  // Asiento
-  const seatGeometry = new THREE.BoxGeometry(0.4, 0.1, 0.6);
-  const seat = new THREE.Mesh(seatGeometry, bodyMaterial);
-  seat.position.set(0, 0.75, -0.2);
-  motorcycle.add(seat);
-
-  // Ruedas
+  // Ruedas con diseño futurista
   const wheelRadius = 0.4;
   const wheelThickness = 0.15;
 
-  // Rueda delantera
+  // Rueda delantera con detalles neón
   const frontWheelGeometry = new THREE.CylinderGeometry(
-    wheelRadius, wheelRadius, wheelThickness, 24
+    wheelRadius, wheelRadius, wheelThickness, 32
   );
+  
   frontWheelGeometry.rotateZ(Math.PI / 2);
   const frontWheel = new THREE.Mesh(frontWheelGeometry, wheelMaterial);
   frontWheel.position.set(0, 0.3, 0.8);
   frontWheel.castShadow = true;
   motorcycle.add(frontWheel);
 
-  // Rueda trasera
+  // Rueda trasera con detalles neón
   const backWheelGeometry = new THREE.CylinderGeometry(
-    wheelRadius, wheelRadius, wheelThickness, 24
+    wheelRadius, wheelRadius, wheelThickness, 32
   );
   backWheelGeometry.rotateZ(Math.PI / 2);
   const backWheel = new THREE.Mesh(backWheelGeometry, wheelMaterial);
@@ -202,8 +185,8 @@ function createMotorcycle() {
   backWheel.castShadow = true;
   motorcycle.add(backWheel);
 
-  // Detalles de las llantas
-  const wheelDetailGeometry = new THREE.TorusGeometry(0.3, 0.03, 8, 16);
+  // Detalles de las llantas con efecto neón
+  const wheelDetailGeometry = new THREE.TorusGeometry(0.3, 0.03, 16, 32);
   
   const frontWheelDetail = new THREE.Mesh(wheelDetailGeometry, detailMaterial);
   frontWheelDetail.position.set(0, 0.3, 0.8);
@@ -215,42 +198,46 @@ function createMotorcycle() {
   backWheelDetail.rotation.y = Math.PI / 2;
   motorcycle.add(backWheelDetail);
 
-  // Luces
-  const headlightGeometry = new THREE.SphereGeometry(0.1, 8, 8);
+  // Luces futuristas
+  const headlightGeometry = new THREE.SphereGeometry(0.12, 16, 16);
   const headlightMaterial = new THREE.MeshPhongMaterial({
     color: 0xffffff,
-    emissive: 0xffffdd,
-    emissiveIntensity: 1
+    emissive: 0x00ff88,
+    emissiveIntensity: 1,
+    specular: 0xffffff,
+    shininess: 100
   });
   const headlight = new THREE.Mesh(headlightGeometry, headlightMaterial);
-  headlight.position.set(0, 0.6, 1);
+  headlight.position.set(0, 0.4, 1.2);
   motorcycle.add(headlight);
 
-  const tailLightGeometry = new THREE.SphereGeometry(0.07, 8, 8);
+  const tailLightGeometry = new THREE.SphereGeometry(0.08, 16, 16);
   const tailLightMaterial = new THREE.MeshPhongMaterial({
     color: 0xff0000,
     emissive: 0xff0000,
-    emissiveIntensity: 0.8
+    emissiveIntensity: 1,
+    specular: 0xffffff,
+    shininess: 100
   });
   const tailLight = new THREE.Mesh(tailLightGeometry, tailLightMaterial);
-  tailLight.position.set(0, 0.6, -1);
+  tailLight.position.set(0, 0.4, -1.2);
   motorcycle.add(tailLight);
 
-  // Luz del faro
-  const headlightSpot = new THREE.SpotLight(0xffffdd, 2, 10, Math.PI / 6, 0.5, 1);
-  headlightSpot.position.set(0, 0.6, 1);
+  // Luz del faro con efecto neón
+  const headlightSpot = new THREE.SpotLight(0x00ff88, 3, 15, Math.PI / 6, 0.5, 1);
+  headlightSpot.position.set(0, 0.4, 1.2);
   headlightSpot.target.position.set(0, 0, 5);
   motorcycle.add(headlightSpot);
   motorcycle.add(headlightSpot.target);
 
   // Configurar sombras
   headlightSpot.castShadow = true;
-  headlightSpot.shadow.mapSize.width = 512;
-  headlightSpot.shadow.mapSize.height = 512;
+  headlightSpot.shadow.mapSize.width = 1024;
+  headlightSpot.shadow.mapSize.height = 1024;
   headlightSpot.shadow.camera.near = 0.5;
-  headlightSpot.shadow.camera.far = 10;
+  headlightSpot.shadow.camera.far = 15;
 
-  // Efectos visuales
+  // Efectos visuales mejorados
   createMotorcycleTrail();
   createExhaustParticles();
 
@@ -259,27 +246,29 @@ function createMotorcycle() {
 
 // Crear estela de la moto
 function createMotorcycleTrail() {
-  // Material para la estela
+  // Material para la estela con efecto neón
   const trailMaterial = new THREE.MeshBasicMaterial({
     color: 0x00ff88,
     transparent: true,
-    opacity: 0.3,
-    side: THREE.DoubleSide
+    opacity: 0.4,
+    side: THREE.DoubleSide,
+    blending: THREE.AdditiveBlending
   });
 
   // Geometría de la estela
-  const trailGeometry = new THREE.PlaneGeometry(0.1, 2);
+  const trailGeometry = new THREE.PlaneGeometry(0.15, 3);
   const trail = new THREE.Mesh(trailGeometry, trailMaterial);
   trail.position.set(0, 0.2, -2);
   trail.rotation.x = Math.PI / 2;
   motorcycle.add(trail);
 
-  // Animar estela
+  // Animar estela con efecto pulsante
   const animateTrail = () => {
     if (motorcycleControls.speed > 0.02) {
       trail.visible = true;
-      trail.scale.y = Math.min(motorcycleControls.speed * 20, 5);
-      trailMaterial.opacity = Math.min(motorcycleControls.speed * 2, 0.6);
+      trail.scale.y = Math.min(motorcycleControls.speed * 25, 6);
+      trailMaterial.opacity = 0.3 + Math.sin(Date.now() * 0.01) * 0.2;
+      trailMaterial.color.setHSL(0.3 + Math.sin(Date.now() * 0.001) * 0.1, 1, 0.5);
     } else {
       trail.visible = false;
     }
@@ -292,27 +281,26 @@ function createMotorcycleTrail() {
 
 // Crear partículas de escape
 function createExhaustParticles() {
-  const exhaustGeometry = new THREE.SphereGeometry(0.05, 8, 8);
+  const exhaustGeometry = new THREE.SphereGeometry(0.06, 16, 16);
   const exhaustMaterial = new THREE.MeshBasicMaterial({
-    color: 0x666666,
+    color: 0x00ff88,
     transparent: true,
-    opacity: 0.7
+    opacity: 0.8,
+    blending: THREE.AdditiveBlending
   });
   
   const exhaust = new THREE.Mesh(exhaustGeometry, exhaustMaterial);
   exhaust.position.set(0.2, 0.4, -1);
   motorcycle.add(exhaust);
   
-  // Animar escape
+  // Animar escape con efectos mejorados
   const animateExhaust = () => {
     if (motorcycleControls.speed > 0.02) {
       exhaust.visible = true;
-      exhaust.scale.set(
-        0.5 + Math.random() * 0.3,
-        0.5 + Math.random() * 0.3,
-        0.5 + Math.random() * 0.3
-      );
-      exhaustMaterial.opacity = 0.3 + Math.random() * 0.4;
+      const scale = 0.5 + Math.sin(Date.now() * 0.01) * 0.3;
+      exhaust.scale.set(scale, scale, scale);
+      exhaustMaterial.opacity = 0.4 + Math.sin(Date.now() * 0.02) * 0.3;
+      exhaustMaterial.color.setHSL(0.3 + Math.sin(Date.now() * 0.002) * 0.1, 1, 0.5);
     } else {
       exhaust.visible = false;
     }
