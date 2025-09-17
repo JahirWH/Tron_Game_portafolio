@@ -134,7 +134,7 @@ function createMotorcycle() {
   const loader = new THREE.GLTFLoader();
   
   loader.load(
-    'modelos/low_poly_motorcycle_001/scene.gltf',
+    'modelos/motorcycle-minecraft/source/model.gltf',
     function (gltf) {
       motorcycle = gltf.scene;
       
