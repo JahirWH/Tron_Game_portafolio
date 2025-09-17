@@ -140,6 +140,18 @@ function createMotorcycle() {
       motorcycle = gltf.scene;
       motorcycle.position.set(0, 0, 0); // Posición inicial en el suelo
       motorcycle.scale.set(0.5, 0.5, 0.5); // Escalar el modelo
+
+      //       // Calcular caja delimitadora del modelo
+      // let box = new THREE.Box3().setFromObject(motorcycle);
+      // let size = new THREE.Vector3();
+      // let min = new THREE.Vector3();
+      // box.getSize(size);
+      // box.getCenter(center);
+      // box.getMin(min);
+
+      // // Ajustar pivote del modelo al suelo real (mínimo Y)
+      // motorcycle.position.y -= min.y;
+
       
       // Configurar sombras para todos los meshes
       motorcycle.traverse(function (child) {
@@ -176,7 +188,7 @@ function createTrees() {
       'modelos/arbol_low_poly/scene.gltf',
       function (gltf) {
         const tree = gltf.scene.clone();
-        tree.position.set(pos.x, -1, pos.z);
+        tree.position.set(pos.x, 0, pos.z);
         tree.rotation.y = pos.rotation;
         tree.scale.set(0.5, 0.5, 0.5); // Escalar el árbol para que sea visible
         
