@@ -31,7 +31,8 @@ let cameraControls = {
   left: false,
   right: false,
   cameraOffset: new THREE.Vector3(0, 3, -5),
-  cameraLookAt: new THREE.Vector3(0, 1, 3)
+  cameraLookAt: new THREE.Vector3(0, 1, 3),
+  followingMotorcycle: false
 };
 
 // Inicializar la escena
@@ -76,15 +77,15 @@ function init() {
   // Inicializar controles de órbita
   controls = new THREE.OrbitControls(camera, renderer.domElement);
   controls.enableDamping = true;
-  controls.dampingFactor = 1.05;
+  controls.dampingFactor = 0.05;
   controls.screenSpacePanning = false;
   controls.minDistance = 1;
-  controls.maxDistance = 20;
-  controls.maxPolarAngle = Math.PI / 0;
-  controls.minPolarAngle = Math.PI / 30;
+  controls.maxDistance = 30;
+  controls.maxPolarAngle = Math.PI / 2;
+  controls.minPolarAngle = 0;
   controls.autoRotate = false;
   controls.autoRotateSpeed = 1;
-  controls.enabled = true;
+  controls.enabled = true; // Habilitado por defecto para cámara libre
 
   // Añadir elementos a la escena
   addLights();
@@ -166,8 +167,8 @@ function createTrees() {
   
   // Posiciones para los dos árboles
   const treePositions = [
-    { x: -8, z: -6, rotation: 0 },
-    { x: 8, z: 6, rotation: Math.PI / 4 }
+    { x: -5, z: -6, rotation: 0 },
+    { x: -5, z: 1, rotation: Math.PI / 2 }
   ];
   
   treePositions.forEach((pos, index) => {
@@ -175,9 +176,9 @@ function createTrees() {
       'modelos/arbol_low_poly/scene.gltf',
       function (gltf) {
         const tree = gltf.scene.clone();
-        tree.position.set(pos.x, 0, pos.z);
+        tree.position.set(pos.x, -1, pos.z);
         tree.rotation.y = pos.rotation;
-        tree.scale.set(2, 2, 2); // Escalar el árbol para que sea visible
+        tree.scale.set(0.5, 0.5, 0.5); // Escalar el árbol para que sea visible
         
         // Configurar sombras para todos los meshes del árbol
         tree.traverse(function (child) {
@@ -205,7 +206,13 @@ function createTrees() {
 function camaraenmoto() {
   if (!motorcycle) return;
 
-  controls.enabled = false;
+  // Solo deshabilitar controles si se está siguiendo a la motocicleta
+  if (cameraControls.followingMotorcycle) {
+    controls.enabled = false;
+  } else {
+    controls.enabled = true;
+    return; // Si no está siguiendo, usar controles libres
+  }
 
   // Actualizar posición de la cámara basada en controles
   const cameraSpeed = 0.1;
@@ -243,6 +250,19 @@ function camaraenmoto() {
   camera.updateMatrix();
 }
 
+// Alternar entre cámara libre y cámara de seguimiento
+function toggleCameraMode() {
+  cameraControls.followingMotorcycle = !cameraControls.followingMotorcycle;
+  
+  if (cameraControls.followingMotorcycle) {
+    console.log("Cámara: Siguiendo a la motocicleta");
+    controls.enabled = false;
+  } else {
+    console.log("Cámara: Modo libre (mouse)");
+    controls.enabled = true;
+  }
+}
+
 // Inicializar controles de la motocicleta
 function initMotorcycleControls() {
   window.addEventListener('keydown', (event) => {
@@ -273,6 +293,9 @@ function initMotorcycleControls() {
         break;
       case ' ': // Espacio para frenar
         motorcycleControls.speed *= 0.9;
+        break;
+      case 'c': // C para cambiar modo de cámara
+        toggleCameraMode();
         break;
     }
   });
