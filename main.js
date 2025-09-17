@@ -21,14 +21,17 @@ let motorcycleControls = {
   rotationSpeed: 0
 };
 
+// Variables para los árboles
+let trees = [];
+
 // Variables para la cámara
 let cameraControls = {
   up: false,
   down: false,
   left: false,
   right: false,
-  cameraOffset: new THREE.Vector3(9, 4, -8),
-  cameraLookAt: new THREE.Vector3(0, 2, 5)
+  cameraOffset: new THREE.Vector3(0, 3, -5),
+  cameraLookAt: new THREE.Vector3(0, 1, 3)
 };
 
 // Inicializar la escena
@@ -89,6 +92,7 @@ function init() {
   createTrashCan();
   createFloor();
   createLamp();
+  createTrees();
   adjustOriginalContent();
   createConnectionLines();
 
@@ -125,171 +129,79 @@ function adjustOriginalContent() {
   addMotorcycleToScene();
 }
 
-// Crear la moto ahora avion
+// Cargar modelo de motocicleta GLTF
 function createMotorcycle() {
-  // Grupo principal de la avion
-  motorcycle = new THREE.Group();
-  motorcycle.position.set(0, 5, -5); // Posición inicial más alta para el avión
-  scene.add(motorcycle);
-
-  // Materiales
-  const bodyMaterial = new THREE.MeshPhongMaterial({
-    color: 0x1a1a1a,
-    specular: 0x00ff88,
-    shininess: 100,
-    emissive: 0x00ff88,
-    emissiveIntensity: 0.2
-  });
-
-  const detailMaterial = new THREE.MeshPhongMaterial({
-    color: 0x00ff88,
-    emissive: 0x00ff88,
-    emissiveIntensity: 0.8,
-    specular: 0xffffff,
-    shininess: 100
-  });
-
-  // Cuerpo principal del avión
-  const bodyGeometry = new THREE.BoxGeometry(1.2, 0.4, 3);
-  const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
-  body.position.y = 0;
-  body.castShadow = true;
-  motorcycle.add(body);
-
-  // Alas
-  const wingGeometry = new THREE.BoxGeometry(6, 0.1, 1);
-  const wing = new THREE.Mesh(wingGeometry, bodyMaterial);
-  wing.position.y = 0;
-  motorcycle.add(wing);
-
-  // Cola
-  const tailGeometry = new THREE.BoxGeometry(1.5, 0.1, 0.8);
-  const tail = new THREE.Mesh(tailGeometry, bodyMaterial);
-  tail.position.set(0, 0.2, -1.2);
-  motorcycle.add(tail);
-
-  // Estabilizador vertical
-  const stabilizerGeometry = new THREE.BoxGeometry(0.1, 0.8, 0.8);
-  const stabilizer = new THREE.Mesh(stabilizerGeometry, bodyMaterial);
-  stabilizer.position.set(0, 0.4, -1.2);
-  motorcycle.add(stabilizer);
-
-  // Detalles con líneas neón
-  const detailGeometry = new THREE.BoxGeometry(1.22, 0.05, 3.02);
-  const bodyDetail = new THREE.Mesh(detailGeometry, detailMaterial);
-  bodyDetail.position.y = 0;
-  motorcycle.add(bodyDetail);
-
-  // Luces del avión
-  const headlightGeometry = new THREE.SphereGeometry(0.12, 16, 16);
-  const headlightMaterial = new THREE.MeshPhongMaterial({
-    color: 0xffffff,
-    emissive: 0x00ff88,
-    emissiveIntensity: 1,
-    specular: 0xffffff,
-    shininess: 100
-  });
-  const headlight = new THREE.Mesh(headlightGeometry, headlightMaterial);
-  headlight.position.set(0, 0, 1.5);
-  motorcycle.add(headlight);
-
-  const tailLightGeometry = new THREE.SphereGeometry(0.08, 16, 16);
-  const tailLightMaterial = new THREE.MeshPhongMaterial({
-    color: 0xff0000,
-    emissive: 0xff0000,
-    emissiveIntensity: 1,
-    specular: 0xffffff,
-    shininess: 100
-  });
-  const tailLight = new THREE.Mesh(tailLightGeometry, tailLightMaterial);
-  tailLight.position.set(0, 0, -1.5);
-  motorcycle.add(tailLight);
-
-  // Luz del faro con efecto neón
-  const headlightSpot = new THREE.SpotLight(0x00ff88, 3, 15, Math.PI / 6, 0.5, 1);
-  headlightSpot.position.set(0, 0, 1.5);
-  headlightSpot.target.position.set(0, 0, 5);
-  motorcycle.add(headlightSpot);
-  motorcycle.add(headlightSpot.target);
-
-  // Configurar sombras
-  headlightSpot.castShadow = true;
-  headlightSpot.shadow.mapSize.width = 1024;
-  headlightSpot.shadow.mapSize.height = 1024;
-  headlightSpot.shadow.camera.near = 0.5;
-  headlightSpot.shadow.camera.far = 15;
-
-  // Efectos visuales mejorados
-  createAirplaneTrail();
-  createExhaustParticles();
-
-  return motorcycle;
-}
-
-// Crear estela del avión
-function createAirplaneTrail() {
-  const trailMaterial = new THREE.MeshBasicMaterial({
-    color: 0x00ff88,
-    transparent: true,
-    opacity: 0.4,
-    side: THREE.DoubleSide,
-    blending: THREE.AdditiveBlending
-  });
-
-  const trailGeometry = new THREE.PlaneGeometry(0.5, 4);
-  const trail = new THREE.Mesh(trailGeometry, trailMaterial);
-  trail.position.set(0, 0, -2);
-  trail.rotation.x = Math.PI / 2;
-  motorcycle.add(trail);
-
-  const animateTrail = () => {
-    if (motorcycleControls.speed > 0.02) {
-      trail.visible = true;
-      trail.scale.y = Math.min(motorcycleControls.speed * 25, 6);
-      trailMaterial.opacity = 0.3 + Math.sin(Date.now() * 0.01) * 0.2;
-      trailMaterial.color.setHSL(0.3 + Math.sin(Date.now() * 0.001) * 0.1, 1, 0.5);
-    } else {
-      trail.visible = false;
+  const loader = new THREE.GLTFLoader();
+  
+  loader.load(
+    'modelos/low_poly_motorcycle_001/scene.gltf',
+    function (gltf) {
+      motorcycle = gltf.scene;
+      motorcycle.position.set(0, 0, 0); // Posición inicial en el suelo
+      motorcycle.scale.set(0.5, 0.5, 0.5); // Escalar el modelo
+      
+      // Configurar sombras para todos los meshes
+      motorcycle.traverse(function (child) {
+        if (child.isMesh) {
+          child.castShadow = true;
+          child.receiveShadow = true;
+        }
+      });
+      
+      scene.add(motorcycle);
+      console.log('Modelo de motocicleta cargado correctamente');
+    },
+    function (progress) {
+      console.log('Cargando modelo...', (progress.loaded / progress.total * 100) + '%');
+    },
+    function (error) {
+      console.error('Error al cargar el modelo de motocicleta:', error);
     }
-    
-    requestAnimationFrame(animateTrail);
-  };
-  
-  animateTrail();
+  );
 }
 
-// Crear partículas de escape
-function createExhaustParticles() {
-  const exhaustGeometry = new THREE.SphereGeometry(0.06, 16, 16);
-  const exhaustMaterial = new THREE.MeshBasicMaterial({
-    color: 0x00ff88,
-    transparent: true,
-    opacity: 0.8,
-    blending: THREE.AdditiveBlending
+// Crear árboles en la escena
+function createTrees() {
+  const loader = new THREE.GLTFLoader();
+  
+  // Posiciones para los dos árboles
+  const treePositions = [
+    { x: -8, z: -6, rotation: 0 },
+    { x: 8, z: 6, rotation: Math.PI / 4 }
+  ];
+  
+  treePositions.forEach((pos, index) => {
+    loader.load(
+      'modelos/arbol_low_poly/scene.gltf',
+      function (gltf) {
+        const tree = gltf.scene.clone();
+        tree.position.set(pos.x, 0, pos.z);
+        tree.rotation.y = pos.rotation;
+        tree.scale.set(2, 2, 2); // Escalar el árbol para que sea visible
+        
+        // Configurar sombras para todos los meshes del árbol
+        tree.traverse(function (child) {
+          if (child.isMesh) {
+            child.castShadow = true;
+            child.receiveShadow = true;
+          }
+        });
+        
+        scene.add(tree);
+        trees.push(tree);
+        console.log(`Árbol ${index + 1} cargado correctamente`);
+      },
+      function (progress) {
+        console.log(`Cargando árbol ${index + 1}...`, (progress.loaded / progress.total * 100) + '%');
+      },
+      function (error) {
+        console.error(`Error al cargar el árbol ${index + 1}:`, error);
+      }
+    );
   });
-  
-  const exhaust = new THREE.Mesh(exhaustGeometry, exhaustMaterial);
-  exhaust.position.set(0, 0, -1.5);
-  motorcycle.add(exhaust);
-  
-  const animateExhaust = () => {
-    if (motorcycleControls.speed > 0.02) {
-      exhaust.visible = true;
-      const scale = 0.5 + Math.sin(Date.now() * 0.01) * 0.3;
-      exhaust.scale.set(scale, scale, scale);
-      exhaustMaterial.opacity = 0.4 + Math.sin(Date.now() * 0.02) * 0.3;
-      exhaustMaterial.color.setHSL(0.3 + Math.sin(Date.now() * 0.002) * 0.1, 1, 0.5);
-    } else {
-      exhaust.visible = false;
-    }
-    
-    requestAnimationFrame(animateExhaust);
-  };
-  
-  animateExhaust();
 }
 
-// Posicionar cámara en la moto
+// Posicionar cámara en la motocicleta
 function camaraenmoto() {
   if (!motorcycle) return;
 
@@ -311,10 +223,10 @@ function camaraenmoto() {
   }
 
   // Limitar el rango de la cámara
-  cameraControls.cameraOffset.y = Math.max(2, Math.min(10, cameraControls.cameraOffset.y));
-  cameraControls.cameraOffset.x = Math.max(-10, Math.min(10, cameraControls.cameraOffset.x));
+  cameraControls.cameraOffset.y = Math.max(1, Math.min(8, cameraControls.cameraOffset.y));
+  cameraControls.cameraOffset.x = Math.max(-8, Math.min(8, cameraControls.cameraOffset.x));
 
-  // Offset relativo a la orientación del avión
+  // Offset relativo a la orientación de la motocicleta
   const offset = cameraControls.cameraOffset.clone();
   offset.applyAxisAngle(new THREE.Vector3(0, 1, 0), motorcycle.rotation.y);
 
@@ -322,7 +234,7 @@ function camaraenmoto() {
   const cameraPosition = motorcycle.position.clone().add(offset);
   camera.position.copy(cameraPosition);
 
-  // Mira hacia adelante del avión
+  // Mira hacia adelante de la motocicleta
   const lookAtOffset = cameraControls.cameraLookAt.clone();
   lookAtOffset.applyAxisAngle(new THREE.Vector3(0, 1, 0), motorcycle.rotation.y);
   const lookAt = motorcycle.position.clone().add(lookAtOffset);
@@ -331,7 +243,7 @@ function camaraenmoto() {
   camera.updateMatrix();
 }
 
-// Inicializar controles de la avion ahora
+// Inicializar controles de la motocicleta
 function initMotorcycleControls() {
   window.addEventListener('keydown', (event) => {
     switch(event.key.toLowerCase()) {
@@ -395,16 +307,16 @@ function initMotorcycleControls() {
   });
 }
 
-// Actualizar movimiento de la moto
+// Actualizar movimiento de la motocicleta
 function updateMotorcycle() {
   if (!motorcycle) return;
 
-  // Parámetros de movimiento
-  const acceleration = 0.0005;
-  const deceleration = 0.99;
-  const maxSpeed = 0.5;
-  const rotationAcceleration = 0.005;
-  const maxRotationSpeed = 0.05;
+  // Parámetros de movimiento para motocicleta terrestre
+  const acceleration = 0.01;
+  const deceleration = 0.95;
+  const maxSpeed = 0.3;
+  const rotationAcceleration = 0.02;
+  const maxRotationSpeed = 0.08;
 
   // Aceleración y frenado
   if (motorcycleControls.forward) {
@@ -421,16 +333,16 @@ function updateMotorcycle() {
     -maxSpeed * 0.5
   );
 
-  // Girar
+  // Girar (inclinación de la motocicleta)
   if (motorcycleControls.left) {
     motorcycleControls.rotationSpeed += rotationAcceleration;
-    motorcycle.rotation.z = Math.min(motorcycle.rotation.z + 0.02, 0.3);
+    motorcycle.rotation.z = Math.min(motorcycle.rotation.z + 0.05, 0.4);
   } else if (motorcycleControls.right) {
     motorcycleControls.rotationSpeed -= rotationAcceleration;
-    motorcycle.rotation.z = Math.max(motorcycle.rotation.z - 0.02, -0.3);
+    motorcycle.rotation.z = Math.max(motorcycle.rotation.z - 0.05, -0.4);
   } else {
-    motorcycleControls.rotationSpeed *= 0.95;
-    motorcycle.rotation.z *= 0.95;
+    motorcycleControls.rotationSpeed *= 0.9;
+    motorcycle.rotation.z *= 0.9;
   }
 
   // Limitar velocidad de giro
@@ -439,44 +351,28 @@ function updateMotorcycle() {
     -maxRotationSpeed
   );
 
-  // Aplicar rotación
+  // Aplicar rotación Y (dirección)
   motorcycle.rotation.y += motorcycleControls.rotationSpeed;
 
-  // Calcular dirección movimiento delante variacioin con subida y bajada
+  // Calcular dirección de movimiento
   const moveX = Math.sin(motorcycle.rotation.y) * motorcycleControls.speed;
   const moveZ = Math.cos(motorcycle.rotation.y) * motorcycleControls.speed;
-  const moveY = Math.sin(motorcycle.rotation.z) * motorcycleControls.speed;
 
-  // Mover avión
+  // Mover motocicleta (mantener en el suelo)
   motorcycle.position.x += moveX;
-  motorcycle.position.y += moveY; 
   motorcycle.position.z -= moveZ;
-
-  // Mantener altura mínima
-  motorcycle.position.y = Math.max(motorcycle.position.y, 0.2);
+  motorcycle.position.y = 0; // Mantener en el suelo
 
   // Limitar área de movimiento
-  const boundaryLimit = 20;
+  const boundaryLimit = 15;
   if (Math.abs(motorcycle.position.x) > boundaryLimit) {
     motorcycle.position.x = Math.sign(motorcycle.position.x) * boundaryLimit;
   }
   if (Math.abs(motorcycle.position.z) > boundaryLimit) {
     motorcycle.position.z = Math.sign(motorcycle.position.z) * boundaryLimit;
   }
-  if (motorcycle.position.y > boundaryLimit) {
-    motorcycle.position.y = boundaryLimit;
-  }
 }
 
-function contador(){
-  const contador = new THREE.Group();
-  const geometry = new THREE.BoxGeometry(0.5, 0.5, 0.5);
-  const material = new THREE.MeshBasicMaterial({ color: 0x00ff88 });
-  const contadorMesh = new THREE.Mesh(geometry, material);
-  contador.position.set(0, 0, 5);
-
-  
-}
 
 // lapmra
 
@@ -1186,6 +1082,15 @@ function animate() {
   if (trashCan) {
     trashCan.rotation.y = Math.sin(Date.now() * 0.0005) * 0.01; // Reducida la velocidad y amplitud
   }
+  
+  // Animación sutil de los árboles (balanceo suave)
+  trees.forEach((tree, index) => {
+    if (tree) {
+      const swayAmount = 0.02;
+      const swaySpeed = 0.001;
+      tree.rotation.z = Math.sin(Date.now() * swaySpeed + index * Math.PI / 2) * swayAmount;
+    }
+  });
   // Efectos adicionales de animación
   if (frames.length > 0) {
     const cubeGroup = frames[0].parent;
@@ -1275,3 +1180,5 @@ window.addEventListener('DOMContentLoaded', () => {
     document.head.appendChild(style);
   }
 })();
+
+
