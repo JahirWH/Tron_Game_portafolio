@@ -129,7 +129,6 @@ function adjustOriginalContent() {
 
   addMotorcycleToScene();
 }
-
 // Cargar modelo de motocicleta GLTF
 function createMotorcycle() {
   const loader = new THREE.GLTFLoader();
@@ -138,21 +137,13 @@ function createMotorcycle() {
     'modelos/low_poly_motorcycle_001/scene.gltf',
     function (gltf) {
       motorcycle = gltf.scene;
-      motorcycle.position.set(0, 0, 0); // Posición inicial en el suelo
-      motorcycle.scale.set(0.5, 0.5, 0.5); // Escalar el modelo
-
-      //       // Calcular caja delimitadora del modelo
-      // let box = new THREE.Box3().setFromObject(motorcycle);
-      // let size = new THREE.Vector3();
-      // let min = new THREE.Vector3();
-      // box.getSize(size);
-      // box.getCenter(center);
-      // box.getMin(min);
-
-      // // Ajustar pivote del modelo al suelo real (mínimo Y)
-      // motorcycle.position.y -= min.y;
-
       
+      // Ajustar posición Y para que esté a la altura de los árboles
+      // Los árboles tienen posición Y=0 y escala 0.5, así que la moto debe estar en Y=0 también
+      motorcycle.position.set(pos.x, 0, pos.z);
+      motorcycle.rotation.y = pos.rotation;
+      motorcycle.scale.set(0.5, 0.5, 0.5);
+
       // Configurar sombras para todos los meshes
       motorcycle.traverse(function (child) {
         if (child.isMesh) {
@@ -162,6 +153,9 @@ function createMotorcycle() {
       });
       
       scene.add(motorcycle);
+      // Esta línea estaba mal: motorcycle.push(motorcycle);
+      // En su lugar, si tienes un array para motocicletas, debería ser:
+      // motorcycles.push(motorcycle);
       console.log('Modelo de motocicleta cargado correctamente');
     },
     function (progress) {
@@ -172,7 +166,6 @@ function createMotorcycle() {
     }
   );
 }
-
 // Crear árboles en la escena
 function createTrees() {
   const loader = new THREE.GLTFLoader();
