@@ -61,7 +61,8 @@ function init() {
     0.1,
     1000
   );
-  camera.position.set(5, 5, 15); // Nueva posición inicial
+  // camera.position.set(5, 5, 15); // Nueva posición inicial
+  camera.position.set(0, 10, 20); // Más alto y más lejos
   camera.lookAt(0, 0, 0);
 
   // Configurar renderizador
@@ -81,7 +82,7 @@ function init() {
   controls.dampingFactor = 0.05;
   controls.screenSpacePanning = true; // Permitir el desplazamiento en pantalla
   controls.minDistance = 3;
-  controls.maxDistance = 50;
+  controls.maxDistance = 20;
   controls.maxPolarAngle = Math.PI; // Permitir rotación vertical completa
   controls.minPolarAngle = 0;
   controls.enableZoom = true;
@@ -213,7 +214,7 @@ function camaraenmoto() {
   if (!motorcycle) return;
 
   if (cameraControls.followingMotorcycle) {
-    controls.enabled = false;
+    controls.enabled = true;
     
     // Actualizar posición de la cámara basada en controles
     const cameraSpeed = 0.1;
@@ -1087,9 +1088,11 @@ function animateTrashAction() {
 function animate() {
   requestAnimationFrame(animate);
   
-  if (!cameraControls.followingMotorcycle) {
-    controls.update(); // Actualizar controles solo en modo libre
-  } else {
+  // SOLUCIÓN: Siempre actualizar controles
+  controls.update();
+  
+  // Si está siguiendo la moto, aplicar la lógica adicional
+  if (cameraControls.followingMotorcycle) {
     camaraenmoto();
   }
   
