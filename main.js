@@ -35,6 +35,10 @@ let cameraControls = {
   followingMotorcycle: false
 };
 
+// Añadir constante para la altura del suelo
+const FLOOR_HEIGHT = -1.2;
+const OBJECT_BASE_HEIGHT = FLOOR_HEIGHT + 0.01;
+
 // Inicializar la escena
 function init() {
   console.log("Iniciando escena 3D...");
@@ -134,38 +138,40 @@ function createMotorcycle() {
   const loader = new THREE.GLTFLoader();
   
   loader.load(
-    'modelos/motorcycle-minecraft/source/model.gltf',
+    'modelos/motorcycle-minecraft/source/model.gltf',  // Asegúrate de que esta ruta sea correcta
     function (gltf) {
       motorcycle = gltf.scene;
       
-      // Ajustar posición Y para que esté a la altura de los árboles
-      // Los árboles tienen posición Y=0 y escala 0.5, así que la moto debe estar en Y=0 también
-      motorcycle.position.set(pos.x, 0, pos.z);
-      motorcycle.rotation.y = pos.rotation;
+      // Posicionar la moto al nivel del suelo
+      motorcycle.position.set(0, OBJECT_BASE_HEIGHT, 0);
       motorcycle.scale.set(0.5, 0.5, 0.5);
-
-      // Configurar sombras para todos los meshes
+      
+      // Ajustar rotación inicial si es necesario
+      motorcycle.rotation.y = Math.PI / 2;  // Girar 90 grados si es necesario
+      
+      // Configurar sombras
       motorcycle.traverse(function (child) {
         if (child.isMesh) {
           child.castShadow = true;
           child.receiveShadow = true;
+          // Mejorar materiales para que coincidan con el estilo
+          child.material.metalness = 0.5;
+          child.material.roughness = 0.5;
         }
       });
       
       scene.add(motorcycle);
-      // Esta línea estaba mal: motorcycle.push(motorcycle);
-      // En su lugar, si tienes un array para motocicletas, debería ser:
-      // motorcycles.push(motorcycle);
-      console.log('Modelo de motocicleta cargado correctamente');
+      console.log('Modelo de motocicleta Minecraft cargado correctamente');
     },
-    function (progress) {
-      console.log('Cargando modelo...', (progress.loaded / progress.total * 100) + '%');
+    function (xhr) {
+      console.log('Cargando modelo...', (xhr.loaded / xhr.total * 100) + '%');
     },
     function (error) {
       console.error('Error al cargar el modelo de motocicleta:', error);
     }
   );
 }
+
 // Crear árboles en la escena
 function createTrees() {
   const loader = new THREE.GLTFLoader();
@@ -386,10 +392,10 @@ function updateMotorcycle() {
   const moveX = Math.sin(motorcycle.rotation.y) * motorcycleControls.speed;
   const moveZ = Math.cos(motorcycle.rotation.y) * motorcycleControls.speed;
 
-  // Mover motocicleta (mantener en el suelo)
+  // Mover motocicleta manteniendo altura constante
   motorcycle.position.x += moveX;
   motorcycle.position.z -= moveZ;
-  motorcycle.position.y = 0; // Mantener en el suelo
+  motorcycle.position.y = OBJECT_BASE_HEIGHT; // Mantener al nivel del suelo
 
   // Limitar área de movimiento
   const boundaryLimit = 15;
