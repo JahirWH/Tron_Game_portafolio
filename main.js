@@ -50,6 +50,40 @@ function init() {
   container.style.zIndex = '1';
   document.body.prepend(container);
 
+
+  // Cargar OrbitControls desde CDN
+  const script = document.createElement('script');
+  script.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
+  script.onload = () => {
+    const orbitScript = document.createElement('script');
+    orbitScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/controls/OrbitControls.js';
+    orbitScript.onload = () => {
+      // AHORA crear los controles
+      controls = new THREE.OrbitControls(camera, renderer.domElement);
+      setupControls();
+    };
+    document.head.appendChild(orbitScript);
+  };
+  document.head.appendChild(script);
+  console.log("Controles creados:", !!controls);
+  console.log("Controles habilitados:", controls ? controls.enabled : 'N/A');
+  // Test de movimiento forzado
+  setInterval(() => {
+    if (controls) {
+      console.log("Camera pos:", camera.position);
+      console.log("Controls enabled:", controls.enabled);
+    }
+  }, 5000);
+}
+
+function setupControls() {
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.05;
+  controls.minDistance = 5;
+  controls.maxDistance = 25;
+  controls.enabled = true;
+}
+
   // Configurar escena
   scene = new THREE.Scene();
   scene.background = new THREE.Color(0xffffff);
@@ -112,7 +146,7 @@ function init() {
   animate();
   
   console.log("Escena 3D lista");
-}
+
 
 // Ajustar contenido HTML
 function adjustOriginalContent() {
@@ -214,8 +248,11 @@ function camaraenmoto() {
   if (!motorcycle) return;
 
   if (cameraControls.followingMotorcycle) {
-    controls.enabled = true;
-    
+      controls.enabled = false; // ← ESTE ES EL PROBLEMA
+      // ... resto del código
+    } else {
+      controls.enabled = true; // ← NECESARIO MANTENER ESTO
+    }
     // Actualizar posición de la cámara basada en controles
     const cameraSpeed = 0.1;
     if (cameraControls.up) {
@@ -249,7 +286,7 @@ function camaraenmoto() {
   }
 
   camera.updateMatrix();
-}
+
 
 // Alternar entre cámara libre y cámara de seguimiento
 function toggleCameraMode() {
@@ -267,6 +304,8 @@ function toggleCameraMode() {
 // Inicializar controles de la motocicleta
 function initMotorcycleControls() {
   window.addEventListener('keydown', (event) => {
+
+    if (event.target !== document.body) return;
     switch(event.key.toLowerCase()) {
       case 'w':
         motorcycleControls.forward = true;
@@ -1087,6 +1126,19 @@ function animateTrashAction() {
 // Animación principal
 function animate() {
   requestAnimationFrame(animate);
+
+   if (controls) {
+    controls.enabled = true;
+    controls.update();
+  }
+  
+  // Moto solo si existe y está en modo seguimiento
+  if (motorcycle && cameraControls.followingMotorcycle) {
+    updateMotorcycle();
+    // NO llamar camaraenmoto() que desactiva controles
+  } else if (motorcycle) {
+    updateMotorcycle();
+  }
   
   // SOLUCIÓN: Siempre actualizar controles
   controls.update();
