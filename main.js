@@ -54,14 +54,15 @@ function init() {
   scene = new THREE.Scene();
   scene.background = new THREE.Color(0xffffff);
 
-  // Configurar cámara
+  // Configurar cámara con una mejor posición inicial
   camera = new THREE.PerspectiveCamera(
-    50, 
-    window.innerWidth / window.innerHeight, 
-    0.1, 
+    75, // Campo de visión más amplio
+    window.innerWidth / window.innerHeight,
+    0.1,
     1000
   );
-  camera.position.set(10, 2, 10);
+  camera.position.set(5, 5, 15); // Nueva posición inicial
+  camera.lookAt(0, 0, 0);
 
   // Configurar renderizador
   renderer = new THREE.WebGLRenderer({ 
@@ -74,18 +75,22 @@ function init() {
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   container.appendChild(renderer.domElement);
 
-  // Inicializar controles de órbita
+  // Actualizar configuración de los controles de órbita
   controls = new THREE.OrbitControls(camera, renderer.domElement);
   controls.enableDamping = true;
   controls.dampingFactor = 0.05;
-  controls.screenSpacePanning = false;
-  controls.minDistance = 1;
-  controls.maxDistance = 30;
-  controls.maxPolarAngle = Math.PI / 2;
+  controls.screenSpacePanning = true; // Permitir el desplazamiento en pantalla
+  controls.minDistance = 3;
+  controls.maxDistance = 50;
+  controls.maxPolarAngle = Math.PI; // Permitir rotación vertical completa
   controls.minPolarAngle = 0;
-  controls.autoRotate = false;
-  controls.autoRotateSpeed = 1;
-  controls.enabled = true; // Habilitado por defecto para cámara libre
+  controls.enableZoom = true;
+  controls.enablePan = true;
+  controls.enableRotate = true;
+  controls.rotateSpeed = 1.0;
+  controls.zoomSpeed = 1.2;
+  controls.panSpeed = 0.8;
+  controls.target.set(0, 0, 0); // Punto al que mira la cámara
 
   // Añadir elementos a la escena
   addLights();
@@ -129,21 +134,19 @@ function adjustOriginalContent() {
 
   addMotorcycleToScene();
 }
+
 // Cargar modelo de motocicleta GLTF
 function createMotorcycle() {
   const loader = new THREE.GLTFLoader();
   
   loader.load(
-    'modelos/motorcycle-minecraft/source/model.gltf',
+    'modelos/low_poly_motorcycle_001/scene.gltf',
     function (gltf) {
       motorcycle = gltf.scene;
+      // Posicionar la moto justo sobre el suelo
+      motorcycle.position.set(0, OBJECT_BASE_HEIGHT, 0);
+      motorcycle.scale.set(0.5, 0.5, 0.5); // Escalar el modelo
       
-      // Ajustar posición Y para que esté a la altura de los árboles
-      // Los árboles tienen posición Y=0 y escala 0.5, así que la moto debe estar en Y=0 también
-      motorcycle.position.set(pos.x, 0, pos.z);
-      motorcycle.rotation.y = pos.rotation;
-      motorcycle.scale.set(0.5, 0.5, 0.5);
-
       // Configurar sombras para todos los meshes
       motorcycle.traverse(function (child) {
         if (child.isMesh) {
@@ -153,9 +156,6 @@ function createMotorcycle() {
       });
       
       scene.add(motorcycle);
-      // Esta línea estaba mal: motorcycle.push(motorcycle);
-      // En su lugar, si tienes un array para motocicletas, debería ser:
-      // motorcycles.push(motorcycle);
       console.log('Modelo de motocicleta cargado correctamente');
     },
     function (progress) {
@@ -166,14 +166,15 @@ function createMotorcycle() {
     }
   );
 }
+
 // Crear árboles en la escena
 function createTrees() {
   const loader = new THREE.GLTFLoader();
   
   // Posiciones para los dos árboles
   const treePositions = [
-    { x: -5, z: -6, rotation: 0 },
-    { x: -5, z: 1, rotation: Math.PI / 2 }
+    { x: -5, y: OBJECT_BASE_HEIGHT, z: -6, rotation: 0 }, // Añadido y: 0.2
+    { x: -5, y: OBJECT_BASE_HEIGHT, z: 1, rotation: Math.PI / 2 } // Añadido y: 0.2
   ];
   
   treePositions.forEach((pos, index) => {
@@ -181,7 +182,7 @@ function createTrees() {
       'modelos/arbol_low_poly/scene.gltf',
       function (gltf) {
         const tree = gltf.scene.clone();
-        tree.position.set(pos.x, 0, pos.z);
+        tree.position.set(pos.x, pos.y, pos.z); // Usando la posición Y definida
         tree.rotation.y = pos.rotation;
         tree.scale.set(0.5, 0.5, 0.5); // Escalar el árbol para que sea visible
         
@@ -211,46 +212,40 @@ function createTrees() {
 function camaraenmoto() {
   if (!motorcycle) return;
 
-  // Solo deshabilitar controles si se está siguiendo a la motocicleta
   if (cameraControls.followingMotorcycle) {
     controls.enabled = false;
+    
+    // Actualizar posición de la cámara basada en controles
+    const cameraSpeed = 0.1;
+    if (cameraControls.up) {
+      cameraControls.cameraOffset.y += cameraSpeed;
+    }
+    if (cameraControls.down) {
+      cameraControls.cameraOffset.y -= cameraSpeed;
+    }
+    if (cameraControls.left) {
+      cameraControls.cameraOffset.x -= cameraSpeed;
+    }
+    if (cameraControls.right) {
+      cameraControls.cameraOffset.x += cameraSpeed;
+    }
+
+    // Limitar el rango de la cámara en modo seguimiento
+    cameraControls.cameraOffset.y = Math.max(1, Math.min(8, cameraControls.cameraOffset.y));
+    cameraControls.cameraOffset.x = Math.max(-8, Math.min(8, cameraControls.cameraOffset.x));
+
+    const offset = cameraControls.cameraOffset.clone();
+    offset.applyAxisAngle(new THREE.Vector3(0, 1, 0), motorcycle.rotation.y);
+    const cameraPosition = motorcycle.position.clone().add(offset);
+    camera.position.copy(cameraPosition);
+
+    const lookAtOffset = cameraControls.cameraLookAt.clone();
+    lookAtOffset.applyAxisAngle(new THREE.Vector3(0, 1, 0), motorcycle.rotation.y);
+    const lookAt = motorcycle.position.clone().add(lookAtOffset);
+    camera.lookAt(lookAt);
   } else {
     controls.enabled = true;
-    return; // Si no está siguiendo, usar controles libres
   }
-
-  // Actualizar posición de la cámara basada en controles
-  const cameraSpeed = 0.1;
-  if (cameraControls.up) {
-    cameraControls.cameraOffset.y += cameraSpeed;
-  }
-  if (cameraControls.down) {
-    cameraControls.cameraOffset.y -= cameraSpeed;
-  }
-  if (cameraControls.left) {
-    cameraControls.cameraOffset.x -= cameraSpeed;
-  }
-  if (cameraControls.right) {
-    cameraControls.cameraOffset.x += cameraSpeed;
-  }
-
-  // Limitar el rango de la cámara
-  cameraControls.cameraOffset.y = Math.max(1, Math.min(8, cameraControls.cameraOffset.y));
-  cameraControls.cameraOffset.x = Math.max(-8, Math.min(8, cameraControls.cameraOffset.x));
-
-  // Offset relativo a la orientación de la motocicleta
-  const offset = cameraControls.cameraOffset.clone();
-  offset.applyAxisAngle(new THREE.Vector3(0, 1, 0), motorcycle.rotation.y);
-
-  // Nueva posición de la cámara
-  const cameraPosition = motorcycle.position.clone().add(offset);
-  camera.position.copy(cameraPosition);
-
-  // Mira hacia adelante de la motocicleta
-  const lookAtOffset = cameraControls.cameraLookAt.clone();
-  lookAtOffset.applyAxisAngle(new THREE.Vector3(0, 1, 0), motorcycle.rotation.y);
-  const lookAt = motorcycle.position.clone().add(lookAtOffset);
-  camera.lookAt(lookAt);
 
   camera.updateMatrix();
 }
@@ -386,10 +381,10 @@ function updateMotorcycle() {
   const moveX = Math.sin(motorcycle.rotation.y) * motorcycleControls.speed;
   const moveZ = Math.cos(motorcycle.rotation.y) * motorcycleControls.speed;
 
-  // Mover motocicleta (mantener en el suelo)
+  // Mover motocicleta manteniendo altura constante
   motorcycle.position.x += moveX;
   motorcycle.position.z -= moveZ;
-  motorcycle.position.y = 0; // Mantener en el suelo
+  motorcycle.position.y = OBJECT_BASE_HEIGHT; // Mantener siempre al nivel del suelo
 
   // Limitar área de movimiento
   const boundaryLimit = 15;
@@ -827,13 +822,13 @@ function createFloor() {
   
   const floor = new THREE.Mesh(floorGeometry, floorMaterial);
   floor.rotation.x = Math.PI / 2;
-  floor.position.y = -1.2;
+  floor.position.y = FLOOR_HEIGHT;
   floor.receiveShadow = true;
   scene.add(floor);
   
-  // Añadir cuadrícula para efecto visual
-  const gridHelper = new THREE.GridHelper(30, 30 , 0x444444, 0x222222);
-  gridHelper.position.y = -1.19;
+  // Ajustar la cuadrícula para que coincida con el suelo
+  const gridHelper = new THREE.GridHelper(30, 30, 0x444444, 0x222222);
+  gridHelper.position.y = FLOOR_HEIGHT + 0.01; // Ligeramente por encima del suelo
   scene.add(gridHelper);
 
   // --- PAREDES NEGRAS CON BORDE NEÓN ---
@@ -1092,11 +1087,11 @@ function animateTrashAction() {
 function animate() {
   requestAnimationFrame(animate);
   
-  // Llamar a la función de la cámara en moto
-  camaraenmoto();
-  
-  // Actualizar controles de órbita
-  controls.update();
+  if (!cameraControls.followingMotorcycle) {
+    controls.update(); // Actualizar controles solo en modo libre
+  } else {
+    camaraenmoto();
+  }
   
   // Rotación suave del cubo con una velocidad más constante
   // if (frames.length > 0) {
