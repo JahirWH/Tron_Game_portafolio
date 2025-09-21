@@ -18,8 +18,10 @@ let motorcycleControls = {
   left: false,
   right: false,
   speed: 0,
-  rotationSpeed: 0
+  direction: Math.PI / 2, // Dirección inicial (90 grados)
+  tilt: 0 // Nueva propiedad para la inclinación
 };
+
 
 // Variables para los árboles
 let trees = [];
@@ -342,68 +344,63 @@ function initMotorcycleControls() {
 function updateMotorcycle() {
   if (!motorcycle) return;
 
-  // Parámetros de movimiento para motocicleta terrestre
-  const acceleration = 0.01;
-  const deceleration = 0.95;
-  const maxSpeed = 0.3;
-  const rotationAcceleration = 0.02;
-  const maxRotationSpeed = 0.08;
+  // Parámetros de movimiento ajustados
+  const acceleration = 0.002;
+  const deceleration = 0.99;
+  const maxSpeed = 0.2;
+  const minSpeed = 0.001;
+  const turnSpeed = 0.02;
+  const maxTilt = 0.3;
+  const tiltRecoverySpeed = 0.95;
 
-  // Aceleración y frenado
+  // Aceleración y frenado más suave
   if (motorcycleControls.forward) {
-    motorcycleControls.speed += acceleration;
+    motorcycleControls.speed = Math.min(motorcycleControls.speed + acceleration, maxSpeed);
   } else if (motorcycleControls.backward) {
-    motorcycleControls.speed -= acceleration;
+    motorcycleControls.speed = Math.max(motorcycleControls.speed - acceleration * 0.5, -maxSpeed * 0.3);
   } else {
     motorcycleControls.speed *= deceleration;
   }
 
-  // Limitar velocidad
-  motorcycleControls.speed = Math.max(
-    Math.min(motorcycleControls.speed, maxSpeed),
-    -maxSpeed * 0.5
-  );
-
-  // Girar (inclinación de la motocicleta)
-  if (motorcycleControls.left) {
-    motorcycleControls.rotationSpeed += rotationAcceleration;
-    motorcycle.rotation.z = Math.min(motorcycle.rotation.z + 0.05, 0.4);
-  } else if (motorcycleControls.right) {
-    motorcycleControls.rotationSpeed -= rotationAcceleration;
-    motorcycle.rotation.z = Math.max(motorcycle.rotation.z - 0.05, -0.4);
+  // Solo permitir giros cuando hay suficiente velocidad
+  const isMoving = Math.abs(motorcycleControls.speed) > minSpeed;
+  if (isMoving) {
+    if (motorcycleControls.left) {
+      motorcycleControls.direction += turnSpeed * Math.sign(motorcycleControls.speed);
+      motorcycleControls.tilt = Math.min(motorcycleControls.tilt + 0.1, maxTilt);
+    } else if (motorcycleControls.right) {
+      motorcycleControls.direction -= turnSpeed * Math.sign(motorcycleControls.speed);
+      motorcycleControls.tilt = Math.max(motorcycleControls.tilt - 0.1, -maxTilt);
+    } else {
+      motorcycleControls.tilt *= tiltRecoverySpeed;
+    }
   } else {
-    motorcycleControls.rotationSpeed *= 0.9;
-    motorcycle.rotation.z *= 0.9;
+    motorcycleControls.tilt *= tiltRecoverySpeed;
   }
 
-  // Limitar velocidad de giro
-  motorcycleControls.rotationSpeed = Math.max(
-    Math.min(motorcycleControls.rotationSpeed, maxRotationSpeed),
-    -maxRotationSpeed
-  );
+  // Aplicar rotaciones
+  motorcycle.rotation.y = motorcycleControls.direction;
+  motorcycle.rotation.z = motorcycleControls.tilt;
 
-  // Aplicar rotación Y (dirección)
-  motorcycle.rotation.y += motorcycleControls.rotationSpeed;
+  // Calcular movimiento basado en dirección
+  const moveX = Math.sin(motorcycleControls.direction) * motorcycleControls.speed;
+  const moveZ = Math.cos(motorcycleControls.direction) * motorcycleControls.speed;
 
-  // Calcular dirección de movimiento
-  const moveX = Math.sin(motorcycle.rotation.y) * motorcycleControls.speed;
-  const moveZ = Math.cos(motorcycle.rotation.y) * motorcycleControls.speed;
-
-  // Mover motocicleta manteniendo altura constante
+  // Actualizar posición
   motorcycle.position.x += moveX;
   motorcycle.position.z -= moveZ;
-  motorcycle.position.y = OBJECT_BASE_HEIGHT; // Mantener al nivel del suelo
+  motorcycle.position.y = OBJECT_BASE_HEIGHT;
 
-  // Limitar área de movimiento
+  // Limitar área de movimiento de forma más suave
   const boundaryLimit = 15;
-  if (Math.abs(motorcycle.position.x) > boundaryLimit) {
-    motorcycle.position.x = Math.sign(motorcycle.position.x) * boundaryLimit;
-  }
-  if (Math.abs(motorcycle.position.z) > boundaryLimit) {
-    motorcycle.position.z = Math.sign(motorcycle.position.z) * boundaryLimit;
+  motorcycle.position.x = Math.max(Math.min(motorcycle.position.x, boundaryLimit), -boundaryLimit);
+  motorcycle.position.z = Math.max(Math.min(motorcycle.position.z, boundaryLimit), -boundaryLimit);
+
+  // Detener completamente si la velocidad es muy baja
+  if (Math.abs(motorcycleControls.speed) < minSpeed) {
+    motorcycleControls.speed = 0;
   }
 }
-
 
 // lapmra
 
