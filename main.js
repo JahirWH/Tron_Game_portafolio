@@ -176,10 +176,10 @@ function createMotorcycle() {
 function createTrees() {
   const loader = new THREE.GLTFLoader();
   
-  // Posiciones para los dos árboles
+  // Posiciones para los dos árboles (ajustar Y al nivel del suelo)
   const treePositions = [
-    { x: -5, z: -6, rotation: 0 },
-    { x: -5, z: 1, rotation: Math.PI / 2 }
+    { x: -5, y: FLOOR_HEIGHT, z: -6, rotation: 0 },
+    { x: -5, y: FLOOR_HEIGHT, z: 1, rotation: Math.PI / 2 }
   ];
   
   treePositions.forEach((pos, index) => {
@@ -187,18 +187,15 @@ function createTrees() {
       'modelos/arbol_low_poly/scene.gltf',
       function (gltf) {
         const tree = gltf.scene.clone();
-        tree.position.set(pos.x, 0, pos.z);
+        tree.position.set(pos.x, pos.y, pos.z); // Y al nivel del suelo
         tree.rotation.y = pos.rotation;
-        tree.scale.set(0.5, 0.5, 0.5); // Escalar el árbol para que sea visible
-        
-        // Configurar sombras para todos los meshes del árbol
+        tree.scale.set(0.5, 0.5, 0.5);
         tree.traverse(function (child) {
           if (child.isMesh) {
             child.castShadow = true;
             child.receiveShadow = true;
           }
         });
-        
         scene.add(tree);
         trees.push(tree);
         console.log(`Árbol ${index + 1} cargado correctamente`);
