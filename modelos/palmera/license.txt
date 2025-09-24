@@ -1,0 +1,11 @@
+Model Information:
+* title:	Lowpoly palm tree
+* source:	https://sketchfab.com/3d-models/lowpoly-palm-tree-48c63038b741421eb36a810d9a9d926b
+* author:	foreverxing (https://sketchfab.com/foreverxing)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Lowpoly palm tree" (https://sketchfab.com/3d-models/lowpoly-palm-tree-48c63038b741421eb36a810d9a9d926b) by foreverxing (https://sketchfab.com/foreverxing) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

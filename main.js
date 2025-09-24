@@ -173,6 +173,51 @@ function createMotorcycle() {
     }
   );
 }
+//funcion crea palmera
+function palmera() {
+  // Asegúrate de que THREE y GLTFLoader están disponibles
+  if (typeof THREE === 'undefined' || typeof THREE.GLTFLoader === 'undefined') {
+    console.error('THREE.js o THREE.GLTFLoader no están disponibles.');
+    return;
+  }
+  const loader = new THREE.GLTFLoader();
+
+  //posicion para la palmera
+  const palmeraposition = [
+    { x: -10, y: FLOOR_HEIGHT, z: -4, rotation: 0 },
+    { x: -3, y: FLOOR_HEIGHT, z: 0, rotation: Math.PI / 2 }
+  ];
+  palmeraposition.forEach((pos, index) => {
+    loader.load(
+      'modelos/palmera/scene.gltf',
+      function (gltf) {
+        const palmera = gltf.scene.clone();
+        palmera.position.set(pos.x, pos.y, pos.z); // Y al nivel del suelo
+        palmera.rotation.y = pos.rotation;
+        palmera.scale.set(0.2, 0.2, 0.2);
+        palmera.traverse(function (child) {
+          if (child.isMesh) {
+            child.castShadow = true;
+            child.receiveShadow = true;
+          }
+        });
+        scene.add(palmera);
+        trees.push(palmera);
+        console.log(`Palmera ${index + 1} cargada correctamente`);
+      },
+      function (progress) {
+        console.log(`Cargando palmera ${index + 1}...`, (progress.loaded / progress.total * 100) + '%');
+      },
+      function (error) {
+        console.error(`Error al cargar la palmera ${index + 1}:`, error);
+      }
+    );
+  });
+}
+
+// Llama a la función palmera en la inicialización
+// Añade esta línea dentro de la función init(), después de createTrees():
+palmera();
 
 // Crear árboles en la escena
 function createTrees() {
