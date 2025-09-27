@@ -175,18 +175,22 @@ function createMotorcycle() {
 }
 //funcion crea palmera
 function palmera() {
-  // Asegúrate de que THREE y GLTFLoader están disponibles
-  if (typeof THREE === 'undefined' || typeof THREE.GLTFLoader === 'undefined') {
-    console.error('THREE.js o THREE.GLTFLoader no están disponibles.');
-    return;
-  }
   const loader = new THREE.GLTFLoader();
 
-  //posicion para la palmera
   const palmeraposition = [
-    { x: -10, y: FLOOR_HEIGHT, z: -4, rotation: 0 },
-    { x: -3, y: FLOOR_HEIGHT, z: 0, rotation: Math.PI / 2 }
+    // Borde del área
+    { x: -13, y: FLOOR_HEIGHT, z: 0, rotation: Math.random() * Math.PI, scale: 0.2 },
+    { x: 13, y: FLOOR_HEIGHT, z: 0, rotation: Math.random() * Math.PI, scale: 0.2 },
+    { x: 0, y: FLOOR_HEIGHT, z: 13, rotation: Math.random() * Math.PI, scale: 0.2 },
+    { x: 0, y: FLOOR_HEIGHT, z: -13, rotation: Math.random() * Math.PI, scale: 0.2 },
+    
+    // Palmeras dispersas
+    { x: -8, y: FLOOR_HEIGHT, z: -8, rotation: Math.random() * Math.PI, scale: 0.2 },
+    { x: 8, y: FLOOR_HEIGHT, z: 8, rotation: Math.random() * Math.PI, scale: 0.2 },
+    { x: -8, y: FLOOR_HEIGHT, z: 8, rotation: Math.random() * Math.PI, scale: 0.2 },
+    { x: 8, y: FLOOR_HEIGHT, z: -8, rotation: Math.random() * Math.PI, scale: 0.2 }
   ];
+
   palmeraposition.forEach((pos, index) => {
     loader.load(
       'modelos/palmera/scene.gltf',
@@ -223,10 +227,32 @@ palmera();
 function createTrees() {
   const loader = new THREE.GLTFLoader();
   
-  // Posiciones para los dos árboles (ajustar Y al nivel del suelo)
+  // Más posiciones para los árboles distribuidas por el mapa
   const treePositions = [
-    { x: -5, y: FLOOR_HEIGHT, z: -6, rotation: 0 },
-    { x: -5, y: FLOOR_HEIGHT, z: 1, rotation: Math.PI / 2 }
+    // Grupo 1 - Esquina noroeste
+    { x: -12, y: FLOOR_HEIGHT, z: -12, rotation: Math.random() * Math.PI, scale: 0.4 },
+    { x: -14, y: FLOOR_HEIGHT, z: -10, rotation: Math.random() * Math.PI, scale: 0.5 },
+    // { x: -10, y: FLOOR_HEIGHT, z: -14, rotation: Math.random() * Math.PI, scale: 0.45 },
+    
+    // Grupo 2 - Esquina noreste
+    { x: 12, y: FLOOR_HEIGHT, z: -12, rotation: Math.random() * Math.PI, scale: 0.5 },
+    { x: 14, y: FLOOR_HEIGHT, z: -14, rotation: Math.random() * Math.PI, scale: 0.4 },
+    // { x: 10, y: FLOOR_HEIGHT, z: -10, rotation: Math.random() * Math.PI, scale: 0.45 },
+    
+    // Grupo 3 - Esquina suroeste
+    { x: -12, y: FLOOR_HEIGHT, z: 12, rotation: Math.random() * Math.PI, scale: 0.45 },
+    { x: -14, y: FLOOR_HEIGHT, z: 14, rotation: Math.random() * Math.PI, scale: 0.5 },
+    // { x: -10, y: FLOOR_HEIGHT, z: 10, rotation: Math.random() * Math.PI, scale: 0.4 },
+    
+    // Grupo 4 - Esquina sureste
+    { x: 12, y: FLOOR_HEIGHT, z: 12, rotation: Math.random() * Math.PI, scale: 0.5 },
+    { x: 14, y: FLOOR_HEIGHT, z: 10, rotation: Math.random() * Math.PI, scale: 0.45 },
+    { x: 10, y: FLOOR_HEIGHT, z: 14, rotation: Math.random() * Math.PI, scale: 0.4 },
+    
+    // Árboles dispersos
+    { x: 0, y: FLOOR_HEIGHT, z: -13, rotation: Math.random() * Math.PI, scale: 0.45 },
+    { x: -7, y: FLOOR_HEIGHT, z: 7, rotation: Math.random() * Math.PI, scale: 0.5 },
+    { x: 7, y: FLOOR_HEIGHT, z: -7, rotation: Math.random() * Math.PI, scale: 0.4 }
   ];
   
   treePositions.forEach((pos, index) => {
@@ -234,18 +260,23 @@ function createTrees() {
       'modelos/arbol_low_poly/scene.gltf',
       function (gltf) {
         const tree = gltf.scene.clone();
-        tree.position.set(pos.x, pos.y, pos.z); // Y al nivel del suelo
+        tree.position.set(pos.x, pos.y, pos.z);
         tree.rotation.y = pos.rotation;
-        tree.scale.set(0.5, 0.5, 0.5);
+        tree.scale.set(pos.scale, pos.scale, pos.scale);
+        
+        // Añadir variación aleatoria sutil a la rotación para más naturalidad
+        tree.rotation.x = (Math.random() - 0.5) * 0.1;
+        tree.rotation.z = (Math.random() - 0.5) * 0.1;
+        
         tree.traverse(function (child) {
           if (child.isMesh) {
             child.castShadow = true;
             child.receiveShadow = true;
           }
         });
+        
         scene.add(tree);
         trees.push(tree);
-        console.log(`Árbol ${index + 1} cargado correctamente`);
       },
       function (progress) {
         console.log(`Cargando árbol ${index + 1}...`, (progress.loaded / progress.total * 100) + '%');
@@ -864,10 +895,10 @@ function createTrashCan() {
 function createFloor() {
   const floorGeometry = new THREE.PlaneGeometry(50, 50);
   const floorMaterial = new THREE.MeshPhongMaterial({
-    color: 0xffffff,
+    color: 0x3ca047, // Verde naturaleza
     side: THREE.DoubleSide,
     transparent: true,
-    opacity: 0
+    opacity: 1 // Totalmente visible
   });
   
   const floor = new THREE.Mesh(floorGeometry, floorMaterial);
@@ -876,8 +907,8 @@ function createFloor() {
   floor.receiveShadow = true;
   scene.add(floor);
   
-  // Añadir cuadrícula para efecto visual
-  const gridHelper = new THREE.GridHelper(30, 30 , 0x444444, 0x222222);
+  // Añadir cuadrícula para efecto visual (opcional, puedes comentar si no quieres líneas)
+  const gridHelper = new THREE.GridHelper(30, 30, 0x4caf50, 0x2e7031); // tonos verdes
   gridHelper.position.y = -1.19;
   scene.add(gridHelper);
 
